@@ -2,9 +2,9 @@
 pragma solidity ^0.8.0;
 
 //import "@openzeppelin/contracts/access/Ownable.sol";
-//import "@OpenZeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@OpenZeppelin/contracts/utils/Counters.sol";
+import "@OpenZeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+//import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+//import "@OpenZeppelin/contracts/utils/Counters.sol";
 import "@Openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
@@ -68,9 +68,9 @@ abstract contract Ownable is Context {
     }
 }
 
-contract Humaverse is ERC721, Ownable, ReentrancyGuard {
-    using Counters for Counters.Counter;
-    Counters.Counter private _tokenIds;
+contract Humaverse is ERC721Enumerable, Ownable, ReentrancyGuard {
+    //using Counters for Counters.Counter;
+    //Counters.Counter private _tokenIds;
 
     using SafeMath for uint256;
 
@@ -80,27 +80,29 @@ contract Humaverse is ERC721, Ownable, ReentrancyGuard {
 
     uint256 public startingIndex;
 
-    uint256 public constant hvPrice = 80000000000000000; //0.08 ETH
+    uint256 public hvPrice;// = 80000000000000000; //0.08 ETH
 
     uint public constant maxHVPurchase = 10;
 
-    uint256 public MAX_HV = 1000;
+    uint256 public constant MAX_HV = 1000;
 
     bool public saleIsActive = false;
 
     uint256 public REVEAL_TIMESTAMP;
 
-    uint256 private newItemId;
-
-    string private baseURI;
+    string private baseURI;//remember to turn to private
 
     event BalanceWithdrawn(uint amount);
     event saleStateFlipped(bool saleIsActive);
     event HVNFTsMinted(address to, uint numberOfNFTs);
+    event TokenPriceSet(uint256 hvPrice);
     
 
     constructor() ERC721("HUMAVERSE", "HVNFT") {}
 
+    function setTimeStamp(uint256 saleStart, uint256 daysOfSale)external onlyOwner {
+        REVEAL_TIMESTAMP = saleStart + (86400 * daysOfSale);
+    }
 
     function setProvenanceHash(string memory provenanceHash) public onlyOwner returns(string memory){
         HV_PROVENANCE = provenanceHash;
@@ -145,25 +147,36 @@ contract Humaverse is ERC721, Ownable, ReentrancyGuard {
         //emit BaseUriSet(baseUri);
     }
 
+    function setHvPrice(uint256 amount) external onlyOwner{
+        hvPrice = amount;
+        emit TokenPriceSet(hvPrice);
+    }
 
+    /**function to mint for public sale after presale has ended */
+    function mintPublicSale(uint numberOfNFTs) public onlyOwner {  
+        require(totalSupply().add(numberOfNFTs) <= MAX_HV, "Purchase would exceed max supply of Humaverses");//if 
+        require(numberOfNFTs > 0, "Must mint at least one NFT/Token");
+        uint supply = totalSupply();
+        uint i;
+        for (i = 0; i < numberOfNFTs; i++) {
+            _safeMint(msg.sender, supply + i);//add one later and test it out
+            
+        }
+    }
 
-    function mintToken(uint numberOfNFTs) public payable nonReentrant{
+    function mintToken(uint numberOfNFTs) external payable nonReentrant{
         require(saleIsActive == true, "Sale has not started");
         require(numberOfNFTs > 0, "Must mint at least one NFT/Token");
         require(numberOfNFTs <= maxHVPurchase, "Can only mint 10 tokens at a time");
-        require(newItemId.add(numberOfNFTs) <= MAX_HV, "Purchase would exceed max supply of Apes");//if 
+        require(totalSupply().add(numberOfNFTs) <= MAX_HV, "Purchase would exceed max supply of Humaverses");//if 
         require(hvPrice.mul(numberOfNFTs) <= msg.value, "Ether value sent is not correct");//multiply number of nfts with price it should be equal to the sent ether
         
-
-        //_tokenIds.increment();
-        //uint256 newItemId = _tokenIds.current();
-        //_safeMint(msg.sender, newItemId);
-        //_setTokenURI(newItemId, tokenURI);
         for (uint256 i = 0; i < numberOfNFTs; i++) {
-            _tokenIds.increment();
-            newItemId = _tokenIds.current();
-            if (newItemId < MAX_HV) {
-                _safeMint(msg.sender, newItemId);
+            //_tokenIds.increment();
+            //newItemId = _tokenIds.current();
+            uint newItemId = totalSupply();
+            if (totalSupply() < MAX_HV) {
+                _safeMint(msg.sender, (newItemId));
             }
         }
 
@@ -171,9 +184,20 @@ contract Humaverse is ERC721, Ownable, ReentrancyGuard {
 
         // If we haven't set the starting index and this is either 1) the last saleable token or 2) the first token to be sold after
         // the end of pre-sale, set the starting index block
-        if (startingIndexBlock == 0 && (newItemId == MAX_HV || block.timestamp >= REVEAL_TIMESTAMP)) {
+        if (startingIndexBlock == 0 && (totalSupply() == MAX_HV || block.timestamp >= REVEAL_TIMESTAMP)) {
             startingIndexBlock = block.number;
         } 
+    }
+
+    function tokenURI(uint256 _tokenId) override public view returns(string memory) {
+        return string(
+               abi.encodePacked(
+        //                "https://ipfs.moralis.io:2053/ipfs/", HV_PROVENANCE,
+                        baseURI,
+                        Strings.toString(_tokenId),
+                        ".json"
+                    )
+            );
     }
 
     function setStartingIndex() public {

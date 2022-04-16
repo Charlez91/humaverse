@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+     <!--Head Content-->
+    <title>MINT YOUR HUMAVERSE-NFTs</title>
+    <!-- Required meta tags -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Import the Bootstrap stylesheet -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+    <script src="https://unpkg.com/moralis/dist/moralis.js"></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light mb-3">
+        <a class="navbar-brand" href="/">Home</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </nav>
+    <main>
+      <div class="container">
+        <div class="row">
+          <div class="col">
+            <h1>Mint HUMAVERSE NFT</h1>
+            <hr>
+            <div class="mb-3">
+              <div>  
+                <button class="btn btn-primary" type="button" id="login" onclick="login()">Connect MetaMask</button>
+                <button class="btn btn-danger"  id="logOut" onclick="logOut();">Logout</button>
+              </div>
+              <p id="balance"> Account Balance</p>
+            </div>
+            <hr>
+            <div class="mb-3">      
+              <div class="form-group">
+                <div class="input-group mb-3">
+                  <input disabled = "true" id="amount" type="text" class="form-control" placeholder="NFT Amount" aria-label="URL" aria-describedby="basic-addon1">
+                </div>
+              <div>  
+                <button disabled = "true" class="btn btn-primary" id="upload" onclick="upload();" >Mint</button>
+              </div>
+              <p id="ethvalue"> Amount Of eth used</p>
+              <hr>
+                <div class="input-group mb-3" id="resultSpace">
+                </div>
+            </div>
+            <div class="mb-3">
+              <button class="btn btn-secondary" id="btn-get-nft" onclick="getNFT();">Show My NFTs</button>
+              <div id="tableOfNFTs" class="table-responsive d-flex flex-wrap" >                   
+            </div> 
+          </div>
+        </div>
+      </div>
+    </main>
+    <script src="{{ url_for('static', filename='js/logic.js') }}"></script>
+  </body>
+</html>
+
